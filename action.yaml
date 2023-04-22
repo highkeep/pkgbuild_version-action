@@ -1,0 +1,33 @@
+name: Version handler
+author: Nick Marshall
+description: Confirms changes in known package - verifies and commits.
+branding:
+  color: blue
+  icon: chevron-up
+inputs:
+  architecture:
+    description: "alderlake, haswell etc."
+    required: false
+    default: ""
+  repoTag:
+    description: "Tag used as repository name."
+    required: false
+    default: ""
+  repoServer:
+    description: "Server to use as repository server URL."
+    required: false
+    default: ""
+  versionsDir:
+    description: "Directory containing tags/pkg versions"
+    required: false
+    default: ""
+  pkg:
+    description: "Directory package that we're checking"
+    required: false
+    default: ""
+outputs:
+  updatePkg:
+    description: "Whether or not package should be rebuilt."
+runs:
+  using: 'docker'
+  image: 'Dockerfile'   
