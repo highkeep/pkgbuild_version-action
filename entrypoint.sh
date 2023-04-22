@@ -26,6 +26,7 @@ sudoCMD="sudo -H -u builder"
 
 # Add git config for functionality
 ${sudoCMD} mkdir /home/builder/.ssh && ${sudoCMD} ssh-keyscan github.com >>/home/builder/.ssh/known_hosts
+${sudoCMD} git config --global --add safe.directory $(pwd)
 ${sudoCMD} git config --global user.name 'Version Action'
 ${sudoCMD} git config --global user.email 'builder@users.noreply.github.com'
 
