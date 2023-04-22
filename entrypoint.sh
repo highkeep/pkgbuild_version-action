@@ -9,8 +9,6 @@ if [ ! -n "${INPUT_PKG:-}" ]; then
     exit 1
 fi
 
-pwd
-
 ##################################################
 
 # Install required packages
@@ -23,7 +21,7 @@ useradd builder -m
 echo "builder ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers
 
 # Give all users (particularly builder) full access to these files
-chown builder: $(pwd) -R
+chown builder: $(pwd)/{,.}* -R
 chmod -R a+rw .
 
 # Set up sudo cmd to make life a little easier
@@ -31,7 +29,7 @@ sudoCMD="sudo -H -u builder"
 
 # Add git config for functionality
 ${sudoCMD} mkdir /home/builder/.ssh && ${sudoCMD} ssh-keyscan github.com >>/home/builder/.ssh/known_hosts
-${sudoCMD} git config --global --add safe.directory '*'
+# ${sudoCMD} git config --global --add safe.directory '*'
 ${sudoCMD} git remote set-url origin https://x-access-token:${INPUT_GHTOKEN}@github.com/${INPUT_GHREPO}
 ${sudoCMD} git config --global user.name 'Version Action'
 ${sudoCMD} git config --global user.email 'builder@users.noreply.github.com'
