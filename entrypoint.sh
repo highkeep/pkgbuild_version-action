@@ -52,20 +52,20 @@ sync
 if [ ! -d "${INPUT_VERSIONDIR:-versions}" ]; then
     ${sudoCMD} mkdir -p "${refDir:-}"
     ${sudoCMD} touch "${refFile:-}"
-    git add "${refFile:-}"
+    ${sudoCMD} git add "${refFile:-}"
     echo "updatePkg=true" >>$GITHUB_OUTPUT
     sync && exit 0
 else
     if [ ! -d "${refDir:-}" ]; then
         ${sudoCMD} mkdir -p "${refDir:-}"
         ${sudoCMD} touch "${refFile:-}"
-        git add "${refFile:-}"
+        ${sudoCMD} git add "${refFile:-}"
         echo "updatePkg=true" >>$GITHUB_OUTPUT
         sync && exit 0
     else
         if [ ! -f "${refFile:-}" ]; then
             ${sudoCMD} touch "${refFile:-}"
-            git add "${refFile:-}"
+            ${sudoCMD} git add "${refFile:-}"
             echo "updatePkg=true" >>$GITHUB_OUTPUT
             sync && exit 0
         fi
