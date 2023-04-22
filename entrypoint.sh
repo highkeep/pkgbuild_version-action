@@ -10,7 +10,7 @@ echo "${INPUT_PKG:-}"
 ##################################################
 
 # Install required packages
-pacman -Syu --noconfirm --needed sudo git ssh
+pacman -Syu --noconfirm --needed sudo git openssh
 
 # Added builder as seen in edlanglois/pkgbuild-action - mainly for permissions
 useradd builder -m
