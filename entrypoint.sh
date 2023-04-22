@@ -4,8 +4,8 @@ set -euo pipefail
 FILE="$(basename "$0")"
 
 # Sanity Check
-#[ -n "${INPUT_PKG:-}" ] || echo "::error file=$FILE,line=$LINENO"::No Package. && exit 1
-echo "${INPUT_PKG:-}"
+[ -n "${INPUT_PKG:-}" ] || echo "::error file=$FILE,line=$LINENO::No Package." && exit 1
+# echo "${INPUT_PKG:-}"
 
 ##################################################
 
@@ -27,8 +27,8 @@ sudoCMD="sudo -H -u builder"
 
 # Add git config for functionality
 ${sudoCMD} mkdir /home/builder/.ssh && ${sudoCMD} ssh-keyscan github.com >>/home/builder/.ssh/known_hosts
+${sudoCMD} git config --global --add safe.directory '*'
 ${sudoCMD} git remote set-url origin https://x-access-token:${INPUT_GHTOKEN}@github.com/${INPUT_GHREPO}
-${sudoCMD} git config --global --add safe.directory $(pwd)
 ${sudoCMD} git config --global user.name 'Version Action'
 ${sudoCMD} git config --global user.email 'builder@users.noreply.github.com'
 
