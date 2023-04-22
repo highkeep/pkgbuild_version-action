@@ -25,7 +25,7 @@ inputs:
     description: "Working repo - This repo."
     required: false
     default: $GITHUB_REPOSITORY
-  token:
+  ghToken:
     description: "Github token needed to sync repo."
     required: false
     default: ${{ secrets.GITHUB_TOKEN }}
