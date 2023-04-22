@@ -19,6 +19,7 @@ useradd builder -m
 echo "builder ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers
 
 # Give all users (particularly builder) full access to these files
+chown builder: $(pwd) -R
 chmod -R a+rw .
 
 # Set up sudo cmd to make life a little easier
