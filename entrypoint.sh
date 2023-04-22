@@ -30,8 +30,8 @@ sudoCMD="sudo -H -u builder"
 # ${sudoCMD} mkdir /home/builder/.ssh && ${sudoCMD} ssh-keyscan github.com >>/home/builder/.ssh/known_hosts
 # ${sudoCMD} git config --global --add safe.directory '*'
 # ${sudoCMD} git remote set-url origin https://x-access-token:${INPUT_GHTOKEN}@github.com/${INPUT_GHREPO}
-${sudoCMD} git config --global user.name 'Version Action'
-${sudoCMD} git config --global user.email 'builder@users.noreply.github.com'
+# ${sudoCMD} git config --global user.name 'Version Action'
+# ${sudoCMD} git config --global user.email 'builder@users.noreply.github.com'
 
 # Sync data function
 function sync() {
@@ -52,6 +52,7 @@ sync
 if [ ! -d "${INPUT_VERSIONDIR:-versions}" ]; then
     ${sudoCMD} mkdir -p "${refDir:-}"
     ${sudoCMD} touch "${refFile:-}"
+    echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
     ${sudoCMD} git add "${refFile:-}"
     echo "updatePkg=true" >>$GITHUB_OUTPUT
     sync && exit 0
@@ -59,12 +60,14 @@ else
     if [ ! -d "${refDir:-}" ]; then
         ${sudoCMD} mkdir -p "${refDir:-}"
         ${sudoCMD} touch "${refFile:-}"
+        echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
         ${sudoCMD} git add "${refFile:-}"
         echo "updatePkg=true" >>$GITHUB_OUTPUT
         sync && exit 0
     else
         if [ ! -f "${refFile:-}" ]; then
             ${sudoCMD} touch "${refFile:-}"
+            echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
             ${sudoCMD} git add "${refFile:-}"
             echo "updatePkg=true" >>$GITHUB_OUTPUT
             sync && exit 0
@@ -76,11 +79,11 @@ fi
 refFileData=$(cat "${refFile:-}")
 
 # Workout if it needs to be updated.
-if [[ "${refFileData:-}" == "${INPUT_PKGREF:-$(git -C ${INPUT_PKG:-} rev-parse HEAD)}" ]]; then
+if [[ "${refFileData:-}" == "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" ]]; then
     echo "updatePkg=false" >>$GITHUB_OUTPUT
     sync && exit 0
 else
-    echo "${INPUT_PKGREF:-$(git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
+    echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
     exit "updatePkg=true" >>$GITHUB_OUTPUT
     sync && exit 0
 fi
