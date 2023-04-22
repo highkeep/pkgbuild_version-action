@@ -9,6 +9,8 @@ if [ ! -n "${INPUT_PKG:-}" ]; then
     exit 1
 fi
 
+pwd
+
 ##################################################
 
 # Install required packages
