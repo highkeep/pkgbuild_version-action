@@ -10,11 +10,7 @@ inputs:
     required: false
     default: ""
   repoTag:
-    description: "Tag used as repository name."
-    required: false
-    default: ""
-  repoServer:
-    description: "Server to use as repository server URL."
+    description: "Tag used for repository name."
     required: false
     default: ""
   versionsDir:
