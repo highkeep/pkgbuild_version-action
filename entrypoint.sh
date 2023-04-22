@@ -1,19 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
-# Sanity Checks
-if [ -n "${INPUT_TPLMAKEPKGCONF:-}" ]; then
-    [ -f "${INPUT_TPLMAKEPKGCONF}" ] || exit 1
-fi
+FILE="$(basename "$0")"
 
-if [ -n "${INPUT_TPLPACMANCONF:-}" ]; then
-    [ -f "${INPUT_TPLPACMANCONF}" ] || exit 1
-fi
+# Sanity Check
+[ -n "${INPUT_PKG:-}" ] || echo "::error file=$FILE,line=$LINENO"::No Package. && exit 0
 
 ##################################################
 
 # Install required packages
-pacman -Syu --noconfirm --needed sudo
+pacman -Syu --noconfirm --needed sudo git
 
 # Added builder as seen in edlanglois/pkgbuild-action - mainly for permissions
 useradd builder -m
@@ -27,78 +23,54 @@ chmod -R a+rw .
 # Set up sudo cmd to make life a little easier
 sudoCMD="sudo -u builder"
 
-function setMarch() {
-    ${sudoCMD} sed -i -r "s/(march=)[A-Za-z0-9-]+(\s?)/\1${1}\2/g" ${2}
+# Sync data function
+function sync() {
+    ${sudoCMD} git fetch --quiet
+    if [[ "$(git rev-parse origin/$GITHUB_BASE_REF)" != "$(git rev-parse HEAD)" ]]; then
+        ${sudoCMD} git pull --quiet
+    fi
 }
 
-function setMtune() {
-    ${sudoCMD} sed -i -r "s/(mtune=)[A-Za-z0-9-]+(\s?)/\1${1}\2/g" ${2}
-}
+# Setup paths
+refDir="${INPUT_VERSIONDIR:-versions}/${INPUT_REPOTAG:-generic_x86_64}"
+refFile="${refDir:-}/${INPUT_PKG:-}"
 
-function setTargetCpu() {
-    ${sudoCMD} sed -i -r "s/(target-cpu=)[A-Za-z0-9-]+(\s?)/\1${1}\2/g" ${2}
-}
+# Run sync
+sync
 
-# Setup output directory
-${sudoCMD} mkdir "${INPUT_CONFOUTDIR:-tmpConf}"
-
-# Work on makepkg config
-if [ -n "${INPUT_TPLMAKEPKGCONF:-}" ]; then
-    makepkgFile="${INPUT_CONFOUTDIR:-tmpConf}/${INPUT_ARCHITECTURE:-generic}_makepkg.conf"
-
-    # Copy makepkg template to output directory
-    ${sudoCMD} cp "${INPUT_TPLMAKEPKGCONF}" ${makepkgFile}
-
-    # Update makepkg to use correct architecture
-    if [[ "${INPUT_ARCHITECTURE:-generic}" == 'generic' ]]; then
-        setMarch "x86-64" ${makepkgFile}
-        setMtune "generic" ${makepkgFile}
-        setTargetCpu "x86-64" ${makepkgFile}
+# Setup versions directory
+if [ ! -d "${INPUT_VERSIONDIR:-versions}" ]; then
+    ${sudoCMD} mkdir -p "${refDir:-}"
+    ${sudoCMD} touch "${refFile:-}"
+    git add "${refFile:-}"
+    echo "updatePkg=true" >>$GITHUB_OUTPUT
+    sync && exit 0
+else
+    if [ ! -d "${refDir:-}" ]; then
+        ${sudoCMD} mkdir -p "${refDir:-}"
+        ${sudoCMD} touch "${refFile:-}"
+        git add "${refFile:-}"
+        echo "updatePkg=true" >>$GITHUB_OUTPUT
+        sync && exit 0
     else
-        setMarch "${INPUT_ARCHITECTURE}" ${makepkgFile}
-        setMtune "${INPUT_ARCHITECTURE}" ${makepkgFile}
-        setTargetCpu "${INPUT_ARCHITECTURE}" ${makepkgFile}
-    fi
-
-    echo "makepkgConf=${makepkgFile}" >>$GITHUB_OUTPUT
-fi
-
-# Work on pacman config
-if [ -n "${INPUT_TPLPACMANCONF:-}" ]; then
-    pacmanFile="${INPUT_CONFOUTDIR:-tmpConf}/${INPUT_ARCHITECTURE:-generic}_pacman.conf"
-
-    # Copy pacman template to output directory
-    ${sudoCMD} cp "${INPUT_TPLPACMANCONF}" ${pacmanFile}
-
-    # Swap out repo tag key
-    if [ -n "${INPUT_REPOTAGKEY:-REPOTAGKEY}" ]; then
-        ${sudoCMD} sed -i "s/${INPUT_REPOTAGKEY:-REPOTAGKEY}/${INPUT_REPOTAG:-${INPUT_ARCHITECTURE:-generic_x86_64}}/g" ${pacmanFile}
-    fi
-
-    # Assume pacman will be using the gh release repo
-    ghRepoServer="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/${INPUT_REPOTAG:-${INPUT_ARCHITECTURE:-generic_x86_64}}"
-
-    # Swap out repo server key
-    if [ -n "${INPUT_REPOSERVERKEY:-REPOSERVERKEY}" ]; then
-        ${sudoCMD} sed -i "s/${INPUT_REPOSERVERKEY:-REPOSERVERKEY}/${INPUT_REPOSERVER:-${ghRepoServer//\//\\/}}/g" ${pacmanFile}
-    fi
-
-    echo "pacmanConf=${pacmanFile}" >>$GITHUB_OUTPUT
-    echo "repoTag=${INPUT_REPOTAG:-${INPUT_ARCHITECTURE:-generic_x86_64}}" >>$GITHUB_OUTPUT
-    echo "repoServer=${INPUT_REPOSERVER:-${ghRepoServer//\//\\/}}" >>$GITHUB_OUTPUT
-fi
-
-# Work on package PKGBUILD
-if [[ "${INPUT_UPDATEPKG:-false}" == true ]]; then
-    if [ -n "${INPUT_PKG:-}" ]; then
-        if [[ "${INPUT_ARCHITECTURE:-generic}" == 'generic' ]]; then
-            setMarch "x86-64" ${INPUT_PKG}/PKGBUILD
-            setMtune "generic" ${INPUT_PKG}/PKGBUILD
-            setTargetCpu "x86-64" ${INPUT_PKG}/PKGBUILD
-        else
-            setMarch "${INPUT_ARCHITECTURE}" ${INPUT_PKG}/PKGBUILD
-            setMtune "${INPUT_ARCHITECTURE}" ${INPUT_PKG}/PKGBUILD
-            setTargetCpu "${INPUT_ARCHITECTURE}" ${INPUT_PKG}/PKGBUILD
+        if [ ! -f "${refFile:-}" ]; then
+            ${sudoCMD} touch "${refFile:-}"
+            git add "${refFile:-}"
+            echo "updatePkg=true" >>$GITHUB_OUTPUT
+            sync && exit 0
         fi
     fi
+fi
+
+# File must be there if we made it.
+refFileData=$(cat "${refFile:-}")
+
+# Workout if it needs to be updated.
+if [[ "${refFileData:-}" == "${INPUT_PKGREF:-$(git -C ${INPUT_PKG:-} rev-parse HEAD)}" ]]; then
+    echo "updatePkg=false" >>$GITHUB_OUTPUT
+    sync && exit 0
+else
+    echo "${INPUT_PKGREF:-$(git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
+    exit "updatePkg=true" >>$GITHUB_OUTPUT
+    sync && exit 0
 fi

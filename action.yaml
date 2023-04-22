@@ -1,14 +1,10 @@
 name: Version handler
 author: Nick Marshall
-description: Confirms changes in known package - verifies and commits.
+description: Confirms changes in known package.
 branding:
   color: blue
   icon: chevron-up
 inputs:
-  architecture:
-    description: "alderlake, haswell etc."
-    required: false
-    default: ""
   repoTag:
     description: "Tag used for repository name."
     required: false
@@ -16,9 +12,13 @@ inputs:
   versionsDir:
     description: "Directory containing tags/pkg versions"
     required: false
-    default: ""
+    default: "version"
   pkg:
-    description: "Directory package that we're checking"
+    description: "Directory of package that we're checking"
+    required: false
+    default: ""
+  pkgRef:
+    description: "Speed up the process by suppling the packages HEAD ref."
     required: false
     default: ""
 outputs:
