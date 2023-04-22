@@ -22,7 +22,7 @@ echo "builder ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers
 chmod -R a+rw .
 
 # Set up sudo cmd to make life a little easier
-sudoCMD="sudo -u builder"
+sudoCMD="sudo -H -u builder"
 
 # Add git config for functionality
 ${sudoCMD} mkdir ~/.ssh && ${sudoCMD} ssh-keyscan github.com >>~/.ssh/known_hosts
