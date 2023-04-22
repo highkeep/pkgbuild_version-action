@@ -21,6 +21,9 @@ echo "builder ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers
 # Give all users (particularly builder) full access to these files
 chmod -R a+rw .
 
+git config --global user.name 'Version Action'
+git config --global user.email 'builder@users.noreply.github.com'
+
 # Set up sudo cmd to make life a little easier
 sudoCMD="sudo -u builder"
 
