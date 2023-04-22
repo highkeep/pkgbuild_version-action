@@ -12,6 +12,10 @@ echo "${INPUT_PKG:-}"
 # Install required packages
 pacman -Syu --noconfirm --needed sudo git openssh
 
+ls -l
+git remote -v
+exit 0
+
 # Added builder as seen in edlanglois/pkgbuild-action - mainly for permissions
 useradd builder -m
 # When installing dependencies, makepkg will use sudo
