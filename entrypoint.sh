@@ -4,7 +4,8 @@ set -euo pipefail
 FILE="$(basename "$0")"
 
 # Sanity Check
-[ -n "${INPUT_PKG:-}" ] || echo "::error file=$FILE,line=$LINENO"::No Package. && exit 1
+#[ -n "${INPUT_PKG:-}" ] || echo "::error file=$FILE,line=$LINENO"::No Package. && exit 1
+echo "${INPUT_PKG:-}"
 
 ##################################################
 
