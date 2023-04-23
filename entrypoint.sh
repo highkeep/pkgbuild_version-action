@@ -12,7 +12,7 @@ fi
 ##################################################
 
 # Install required packages
-pacman -Syu --noconfirm --needed sudo git openssh
+pacman -Syu --noconfirm --needed sudo
 
 # ls -l within ubuntu-latest shows owner of clone is runner and group is docker
 # id of runner user: uid=1001(runner) gid=123(docker) groups=123(docker),4(adm),101(systemd-journal)
@@ -33,14 +33,6 @@ sudoCMD="sudo -H -u runner"
 # Add git config for functionality
 ${sudoCMD} git config --global --add safe.directory /github/workspace
 
-# Sync data function
-function sync() {
-    ${sudoCMD} git fetch --quiet
-    if [[ "$(git rev-parse origin/$GITHUB_BASE_REF)" != "$(git rev-parse HEAD)" ]]; then
-        ${sudoCMD} git pull --quiet
-    fi
-}
-
 # Setup paths
 refDir="${INPUT_VERSIONDIR:-versions}/${INPUT_REPOTAG:-generic_x86_64}"
 refFile="${refDir:-}/${INPUT_PKG:-}"
@@ -48,29 +40,26 @@ refFile="${refDir:-}/${INPUT_PKG:-}"
 # Rest doesn't change - its still the file that was used.
 echo "refFile=${refFile:-}" >>$GITHUB_OUTPUT
 
-# Run sync
-sync
-
 # Setup versions directory
 if [ ! -d "${INPUT_VERSIONDIR:-versions}" ]; then
     ${sudoCMD} mkdir -p "${refDir:-}"
     ${sudoCMD} touch "${refFile:-}"
     echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
     echo "updatePkg=true" >>$GITHUB_OUTPUT
-    # sync && exit 0
+    exit 0
 else
     if [ ! -d "${refDir:-}" ]; then
         ${sudoCMD} mkdir -p "${refDir:-}"
         ${sudoCMD} touch "${refFile:-}"
         echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
         echo "updatePkg=true" >>$GITHUB_OUTPUT
-        sync && exit 0
+        exit 0
     else
         if [ ! -f "${refFile:-}" ]; then
             ${sudoCMD} touch "${refFile:-}"
             echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
             echo "updatePkg=true" >>$GITHUB_OUTPUT
-            sync && exit 0
+            exit 0
         fi
     fi
 fi
@@ -81,9 +70,9 @@ refFileData=$(cat "${refFile:-}")
 # Workout if it needs to be updated.
 if [[ "${refFileData:-}" == "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" ]]; then
     echo "updatePkg=false" >>$GITHUB_OUTPUT
-    sync && exit 0
+    exit 0
 else
     echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
     exit "updatePkg=true" >>$GITHUB_OUTPUT
-    sync && exit 0
+    exit 0
 fi
