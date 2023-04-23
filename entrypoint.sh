@@ -33,13 +33,6 @@ sudoCMD="sudo -H -u runner"
 # Add git config for functionality
 ${sudoCMD} git config --global --add safe.directory /github/workspace
 
-# Leaving these here just in case...
-# ${sudoCMD} mkdir /home/builder/.ssh && ${sudoCMD} ssh-keyscan github.com >>/home/builder/.ssh/known_hosts
-# ${sudoCMD} git config --global --add safe.directory '*'
-# ${sudoCMD} git remote set-url origin https://x-access-token:${INPUT_GHTOKEN}@github.com/${INPUT_GHREPO}
-# ${sudoCMD} git config --global user.name 'Version Action'
-# ${sudoCMD} git config --global user.email 'builder@users.noreply.github.com'
-
 # Sync data function
 function sync() {
     ${sudoCMD} git fetch --quiet
@@ -51,6 +44,7 @@ function sync() {
 # Setup paths
 refDir="${INPUT_VERSIONDIR:-versions}/${INPUT_REPOTAG:-generic_x86_64}"
 refFile="${refDir:-}/${INPUT_PKG:-}"
+
 # Rest doesn't change - its still the file that was used.
 echo "refFile=${refFile:-}" >>$GITHUB_OUTPUT
 
@@ -62,7 +56,6 @@ if [ ! -d "${INPUT_VERSIONDIR:-versions}" ]; then
     ${sudoCMD} mkdir -p "${refDir:-}"
     ${sudoCMD} touch "${refFile:-}"
     echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
-    # ${sudoCMD} git add "${refFile:-}"
     echo "updatePkg=true" >>$GITHUB_OUTPUT
     # sync && exit 0
 else
@@ -70,14 +63,12 @@ else
         ${sudoCMD} mkdir -p "${refDir:-}"
         ${sudoCMD} touch "${refFile:-}"
         echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
-        # ${sudoCMD} git add "${refFile:-}"
         echo "updatePkg=true" >>$GITHUB_OUTPUT
         sync && exit 0
     else
         if [ ! -f "${refFile:-}" ]; then
             ${sudoCMD} touch "${refFile:-}"
             echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
-            # ${sudoCMD} git add "${refFile:-}"
             echo "updatePkg=true" >>$GITHUB_OUTPUT
             sync && exit 0
         fi
