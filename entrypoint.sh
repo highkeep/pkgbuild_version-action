@@ -27,6 +27,7 @@ chmod -R a+rw .
 sudoCMD="sudo -H -u builder"
 
 # Add git config for functionality
+${sudoCMD} git config --global --add safe.directory /github/workspace
 # ${sudoCMD} mkdir /home/builder/.ssh && ${sudoCMD} ssh-keyscan github.com >>/home/builder/.ssh/known_hosts
 # ${sudoCMD} git config --global --add safe.directory '*'
 # ${sudoCMD} git remote set-url origin https://x-access-token:${INPUT_GHTOKEN}@github.com/${INPUT_GHREPO}
