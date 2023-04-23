@@ -14,17 +14,21 @@ fi
 # Install required packages
 pacman -Syu --noconfirm --needed sudo git openssh
 
-# Added builder as seen in edlanglois/pkgbuild-action - mainly for permissions
-useradd builder -m
-# When installing dependencies, makepkg will use sudo
-# Give user `builder` passwordless sudo access
-echo "builder ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers
+# ls -l within ubuntu-latest shows owner of clone is runner and group is docker
+# id of runner user: uid=1001(runner) gid=123(docker) groups=123(docker),4(adm),101(systemd-journal)
+# So lets match that from now on...
 
-# Give all users (particularly builder) full access to these files
-chmod -R a+rw .
+# Add docker group
+groupadd -g 123 docker
+
+# Add runner user
+useradd runner -m -u 1001 -g 123
+# When installing dependencies, makepkg will use sudo
+# Give user `runner` passwordless sudo access
+echo "runner ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers
 
 # Set up sudo cmd to make life a little easier
-sudoCMD="sudo -H -u builder"
+sudoCMD="sudo -H -u runner"
 
 # Add git config for functionality
 ${sudoCMD} git config --global --add safe.directory /github/workspace
@@ -47,6 +51,8 @@ function sync() {
 # Setup paths
 refDir="${INPUT_VERSIONDIR:-versions}/${INPUT_REPOTAG:-generic_x86_64}"
 refFile="${refDir:-}/${INPUT_PKG:-}"
+# Rest doesn't change - its still the file that was used.
+echo "refFile=${refFile:-}" >>$GITHUB_OUTPUT
 
 # Run sync
 sync
@@ -56,22 +62,22 @@ if [ ! -d "${INPUT_VERSIONDIR:-versions}" ]; then
     ${sudoCMD} mkdir -p "${refDir:-}"
     ${sudoCMD} touch "${refFile:-}"
     echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
-    ${sudoCMD} git add "${refFile:-}"
+    # ${sudoCMD} git add "${refFile:-}"
     echo "updatePkg=true" >>$GITHUB_OUTPUT
-    sync && exit 0
+    # sync && exit 0
 else
     if [ ! -d "${refDir:-}" ]; then
         ${sudoCMD} mkdir -p "${refDir:-}"
         ${sudoCMD} touch "${refFile:-}"
         echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
-        ${sudoCMD} git add "${refFile:-}"
+        # ${sudoCMD} git add "${refFile:-}"
         echo "updatePkg=true" >>$GITHUB_OUTPUT
         sync && exit 0
     else
         if [ ! -f "${refFile:-}" ]; then
             ${sudoCMD} touch "${refFile:-}"
             echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
-            ${sudoCMD} git add "${refFile:-}"
+            # ${sudoCMD} git add "${refFile:-}"
             echo "updatePkg=true" >>$GITHUB_OUTPUT
             sync && exit 0
         fi

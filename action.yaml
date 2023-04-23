@@ -30,6 +30,8 @@ inputs:
   #   required: false
   #   default: ${{ secrets.GITHUB_TOKEN }}
 tputs:
+  refFile:
+    description: "The file used for this package's checks"
   updatePkg:
     description: "Whether or not package should be rebuilt."
 runs:
