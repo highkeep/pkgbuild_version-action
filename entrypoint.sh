@@ -46,7 +46,7 @@ if [ ! -d "${INPUT_VERSIONDIR:-versions}" ]; then
     ${sudoCMD} touch "${refFile:-}"
     echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
     ${sudoCMD} git add "${refFile:-}"
-    echo "updatePkg=true" >>$GITHUB_OUTPUT
+    echo "requiresUpdate=true" >>$GITHUB_OUTPUT
     exit 0
 else
     if [ ! -d "${refDir:-}" ]; then
@@ -54,14 +54,14 @@ else
         ${sudoCMD} touch "${refFile:-}"
         echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
         ${sudoCMD} git add "${refFile:-}"
-        echo "updatePkg=true" >>$GITHUB_OUTPUT
+        echo "requiresUpdate=true" >>$GITHUB_OUTPUT
         exit 0
     else
         if [ ! -f "${refFile:-}" ]; then
             ${sudoCMD} touch "${refFile:-}"
             echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
             ${sudoCMD} git add "${refFile:-}"
-            echo "updatePkg=true" >>$GITHUB_OUTPUT
+            echo "requiresUpdate=true" >>$GITHUB_OUTPUT
             exit 0
         fi
     fi
@@ -73,11 +73,11 @@ refFileData=$(cat "${refFile:-}")
 # Workout if it needs to be updated.
 if [[ "${refFileData:-}" == "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" ]]; then
     ${sudoCMD} git add "${refFile:-}"
-    echo "updatePkg=false" >>$GITHUB_OUTPUT
+    echo "requiresUpdate=false" >>$GITHUB_OUTPUT
     exit 0
 else
     echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
     ${sudoCMD} git add "${refFile:-}"
-    exit "updatePkg=true" >>$GITHUB_OUTPUT
+    exit "requiresUpdate=true" >>$GITHUB_OUTPUT
     exit 0
 fi

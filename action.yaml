@@ -21,18 +21,10 @@ inputs:
     description: "Speed up the process by suppling the packages HEAD ref."
     required: false
     default: ""
-  # ghRepo:
-  #   description: "Working repo - This repo."
-  #   required: false
-  #   default: $GITHUB_REPOSITORY
-  # ghToken:
-  #   description: "Github token needed to sync repo."
-  #   required: false
-  #   default: ${{ secrets.GITHUB_TOKEN }}
-tputs:
+outputs:
   refFile:
     description: "The file used for this package's checks"
-  updatePkg:
+  requiresUpdate:
     description: "Whether or not package should be rebuilt."
 runs:
   using: 'docker'
