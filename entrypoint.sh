@@ -78,6 +78,6 @@ if [[ "${refFileData:-}" == "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} 
 else
     echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
     ${sudoCMD} git add "${refFile:-}"
-    exit "requiresUpdate=true" >>$GITHUB_OUTPUT
+    echo "requiresUpdate=true" >>$GITHUB_OUTPUT
     exit 0
 fi
