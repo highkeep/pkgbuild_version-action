@@ -45,16 +45,18 @@ Ref="${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}"
 
 # Assume that if .SRCINFO is missing then it is generated elsewhere.
 # AUR checks that .SRCINFO exists so a missing file can't go unnoticed.
-if [ -f .SRCINFO ] && ! ${sudoCMD} --printsrcinfo | diff - .SRCINFO; then
+cd ${INPUT_PKG:-}
+if [ -f .SRCINFO ] && ! ${sudoCMD} makepkg --printsrcinfo | diff - .SRCINFO; then
     if [ "${INPUT_UPDATESRCINFO:-false}" == true ]; then
         echo "::warning file=$FILE,line=$LINENO::Mismatched .SRCINFO. Updating with: makepkg --printsrcinfo > .SRCINFO"
         ${sudoCMD} makepkg --printsrcinfo >.SRCINFO
-        Ref="${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse $(${sudoCMD} git -C ${INPUT_PKG:-} branch --show-current))}"
+        Ref="${INPUT_PKGREF:-$(${sudoCMD} git rev-parse $(${sudoCMD} git branch --show-current))}"
     else
         echo "::error file=$FILE,line=$LINENO::Mismatched .SRCINFO. Update with: makepkg --printsrcinfo > .SRCINFO"
         exit 1
     fi
 fi
+cd ../
 
 # Setup versions directory
 if [ ! -d "${INPUT_VERSIONDIR:-versions}" ]; then
