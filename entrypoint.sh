@@ -60,7 +60,7 @@ fi
 if [ ! -d "${INPUT_VERSIONDIR:-versions}" ]; then
     ${sudoCMD} mkdir -p "${refDir:-}"
     ${sudoCMD} touch "${refFile:-}"
-    echo "${Ref}" >"${refFile:-}"
+    echo "${Ref:-}" >"${refFile:-}"
     ${sudoCMD} git add "${refFile:-}"
     echo "requiresUpdate=true" >>$GITHUB_OUTPUT
     exit 0
@@ -68,14 +68,14 @@ else
     if [ ! -d "${refDir:-}" ]; then
         ${sudoCMD} mkdir -p "${refDir:-}"
         ${sudoCMD} touch "${refFile:-}"
-        echo "${Ref}" >"${refFile:-}"
+        echo "${Ref:-}" >"${refFile:-}"
         ${sudoCMD} git add "${refFile:-}"
         echo "requiresUpdate=true" >>$GITHUB_OUTPUT
         exit 0
     else
         if [ ! -f "${refFile:-}" ]; then
             ${sudoCMD} touch "${refFile:-}"
-            echo "${Ref}" >"${refFile:-}"
+            echo "${Ref:-}" >"${refFile:-}"
             ${sudoCMD} git add "${refFile:-}"
             echo "requiresUpdate=true" >>$GITHUB_OUTPUT
             exit 0
@@ -87,12 +87,12 @@ fi
 refFileData=$(cat "${refFile:-}")
 
 # Workout if it needs to be updated.
-if [[ "${refFileData:-}" == "${INPUT_PKGREF:-${Ref}}" ]]; then
+if [[ "${refFileData:-}" == "${INPUT_PKGREF:-${Ref:-}}" ]]; then
     ${sudoCMD} git add "${refFile:-}"
     echo "requiresUpdate=false" >>$GITHUB_OUTPUT
     exit 0
 else
-    echo "${INPUT_PKGREF:-${Ref}}" >"${refFile:-}"
+    echo "${INPUT_PKGREF:-${Ref:-}}" >"${refFile:-}"
     ${sudoCMD} git add "${refFile:-}"
     echo "requiresUpdate=true" >>$GITHUB_OUTPUT
     exit 0
