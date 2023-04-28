@@ -12,7 +12,7 @@ fi
 ##################################################
 
 # Install required packages
-pacman -Syu --noconfirm --needed sudo git
+pacman -Syu --noconfirm --needed sudo git diffutils
 
 # ls -l within ubuntu-latest shows owner of clone is runner and group is docker
 # id of runner user: uid=1001(runner) gid=123(docker) groups=123(docker),4(adm),101(systemd-journal)
