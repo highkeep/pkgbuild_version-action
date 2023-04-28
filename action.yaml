@@ -21,11 +21,14 @@ inputs:
     description: "Speed up the process by suppling the packages HEAD ref."
     required: false
     default: ""
+  updateSrcInfo:
+    description: "Allow .SRCINFO to be regenerated."
+    required: false
 outputs:
   refFile:
     description: "The file used for this package's checks"
   requiresUpdate:
     description: "Whether or not package should be rebuilt."
 runs:
-  using: 'docker'
-  image: 'Dockerfile'   
+  using: "docker"
+  image: "Dockerfile"

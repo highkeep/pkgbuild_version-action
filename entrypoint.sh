@@ -40,11 +40,27 @@ refFile="${refDir:-}/${INPUT_PKG:-}"
 # Rest doesn't change - its still the file that was used.
 echo "refFile=${refFile:-}" >>$GITHUB_OUTPUT
 
+# Get Ref
+Ref="${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}"
+
+# Assume that if .SRCINFO is missing then it is generated elsewhere.
+# AUR checks that .SRCINFO exists so a missing file can't go unnoticed.
+if [ -f .SRCINFO ] && ! ${sudoCMD} --printsrcinfo | diff - .SRCINFO; then
+    if [ "${INPUT_UPDATESRCINFO:-false}" == true ]; then
+        echo "::warning file=$FILE,line=$LINENO::Mismatched .SRCINFO. Updating with: makepkg --printsrcinfo > .SRCINFO"
+        ${sudoCMD} makepkg --printsrcinfo >.SRCINFO
+        Ref="${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse $(${sudoCMD} git -C ${INPUT_PKG:-} branch --show-current))}"
+    else
+        echo "::error file=$FILE,line=$LINENO::Mismatched .SRCINFO. Update with: makepkg --printsrcinfo > .SRCINFO"
+        exit 1
+    fi
+fi
+
 # Setup versions directory
 if [ ! -d "${INPUT_VERSIONDIR:-versions}" ]; then
     ${sudoCMD} mkdir -p "${refDir:-}"
     ${sudoCMD} touch "${refFile:-}"
-    echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
+    echo "${Ref}" >"${refFile:-}"
     ${sudoCMD} git add "${refFile:-}"
     echo "requiresUpdate=true" >>$GITHUB_OUTPUT
     exit 0
@@ -52,14 +68,14 @@ else
     if [ ! -d "${refDir:-}" ]; then
         ${sudoCMD} mkdir -p "${refDir:-}"
         ${sudoCMD} touch "${refFile:-}"
-        echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
+        echo "${Ref}" >"${refFile:-}"
         ${sudoCMD} git add "${refFile:-}"
         echo "requiresUpdate=true" >>$GITHUB_OUTPUT
         exit 0
     else
         if [ ! -f "${refFile:-}" ]; then
             ${sudoCMD} touch "${refFile:-}"
-            echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
+            echo "${Ref}" >"${refFile:-}"
             ${sudoCMD} git add "${refFile:-}"
             echo "requiresUpdate=true" >>$GITHUB_OUTPUT
             exit 0
@@ -71,12 +87,12 @@ fi
 refFileData=$(cat "${refFile:-}")
 
 # Workout if it needs to be updated.
-if [[ "${refFileData:-}" == "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" ]]; then
+if [[ "${refFileData:-}" == "${INPUT_PKGREF:-${Ref}}" ]]; then
     ${sudoCMD} git add "${refFile:-}"
     echo "requiresUpdate=false" >>$GITHUB_OUTPUT
     exit 0
 else
-    echo "${INPUT_PKGREF:-$(${sudoCMD} git -C ${INPUT_PKG:-} rev-parse HEAD)}" >"${refFile:-}"
+    echo "${INPUT_PKGREF:-${Ref}}" >"${refFile:-}"
     ${sudoCMD} git add "${refFile:-}"
     echo "requiresUpdate=true" >>$GITHUB_OUTPUT
     exit 0
