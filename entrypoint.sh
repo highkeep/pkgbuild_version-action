@@ -58,34 +58,25 @@ if [ -f .SRCINFO ] && ! ${sudoCMD} makepkg --printsrcinfo | diff - .SRCINFO; the
 fi
 cd ../
 
-# Setup versions directory
-if [ ! -d "${INPUT_VERSIONDIR:-versions}" ]; then
-    ${sudoCMD} mkdir -p "${refDir:-}"
-    ${sudoCMD} touch "${refFile:-}"
-    echo "${Ref:-}" >"${refFile:-}"
-    ${sudoCMD} git add "${refFile:-}"
-    echo "requiresUpdate=true" >>$GITHUB_OUTPUT
-    exit 0
-else
+# Check for version file
+if [ ! -f "${refFile:-}" ]; then
+    # Ensure required versions directory
     if [ ! -d "${refDir:-}" ]; then
         ${sudoCMD} mkdir -p "${refDir:-}"
-        ${sudoCMD} touch "${refFile:-}"
-        echo "${Ref:-}" >"${refFile:-}"
-        ${sudoCMD} git add "${refFile:-}"
-        echo "requiresUpdate=true" >>$GITHUB_OUTPUT
-        exit 0
-    else
-        if [ ! -f "${refFile:-}" ]; then
-            ${sudoCMD} touch "${refFile:-}"
-            echo "${Ref:-}" >"${refFile:-}"
-            ${sudoCMD} git add "${refFile:-}"
-            echo "requiresUpdate=true" >>$GITHUB_OUTPUT
-            exit 0
-        fi
     fi
+
+    # Create version file
+    ${sudoCMD} touch "${refFile:-}"
+    echo "${Ref:-}" >"${refFile:-}"
+
+    # Add version file to tracking
+    ${sudoCMD} git add "${refFile:-}"
+
+    echo "requiresUpdate=true" >>$GITHUB_OUTPUT
+    exit 0
 fi
 
-# File must be there if we made it.
+# File must be there if we made it here.
 refFileData=$(cat "${refFile:-}")
 
 # Workout if it needs to be updated.
